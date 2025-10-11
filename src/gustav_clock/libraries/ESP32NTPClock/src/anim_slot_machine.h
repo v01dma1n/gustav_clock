@@ -4,6 +4,7 @@
 #include "i_animation.h"
 
 #include <string>
+#include <vector>
 
 class SlotMachineAnimation : public IAnimation {
 public:
@@ -18,8 +19,10 @@ public:
     bool isDone() override;
 
 private:
-  std::string _targetText;
+    std::string _targetText;
     std::string _currentText;
+    std::string _parsedText;
+    std::vector<bool> _dotStates;
     bool* _isLocked;
     unsigned long _lockDelay;
     unsigned long _holdTime;

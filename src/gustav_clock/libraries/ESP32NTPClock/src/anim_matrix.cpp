@@ -24,30 +24,9 @@ void MatrixAnimation::setup(IDisplayDriver* display) {
     IAnimation::setup(display);
     int size = _display->getDisplaySize();
 
-    // --- Pre-parse the target string to handle dots ---
-    _parsedTargetText = "";
-    _dotState.assign(size, false);
+    // Use the new, reliable parser from the base class
+    parseTextAndDots(_targetText, _dotsWithPreviousChar, _parsedTargetText, _dotState);
     
-    int text_idx = 0;
-    int display_idx = 0;
-    while (text_idx < _targetText.length() && display_idx < size) {
-        char currentChar = _targetText[text_idx];
-        if (currentChar == '.' && _dotsWithPreviousChar) {
-            if (display_idx > 0) {
-                _dotState[display_idx - 1] = true;
-            }
-            text_idx++;
-            continue;
-        }
-        _parsedTargetText += currentChar;
-        text_idx++;
-        display_idx++;
-    }
-    // Pad with spaces if needed
-    while (_parsedTargetText.length() < size) {
-        _parsedTargetText += ' ';
-    }
-
     // Initialize rain positions
     _rainPos.resize(size, std::vector<float>(3, 0.0f));
     for (int i = 0; i < size; ++i) {

@@ -17,7 +17,7 @@ extern SemaphoreHandle_t serialMutex;
     } while (0)
 
 #define LOGERR(format, ...) LOGMSG(APP_LOG_ERROR, format, ##__VA_ARGS__)
-#define LOGINF(format, ...)  LOGMSG(APP_LOG_INFO,  format, ##__VA_ARGS__)
+#define LOGINF(format, ...) LOGMSG(APP_LOG_INFO,  format, ##__VA_ARGS__)
 #define LOGDBG(format, ...) LOGMSG(APP_LOG_DEBUG, format, ##__VA_ARGS__)
 
 #endif // DEBUG_H

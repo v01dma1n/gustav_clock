@@ -81,7 +81,7 @@ static const unsigned long VFD_FONT_MAP[] = {
     SEG_B | SEG_C | SEG_D | SEG_E,                        // J
     0,                                                                  // K
     SEG_D | SEG_E | SEG_F,                                    // L
-    0,                                                                  // M
+    SEG_A | SEG_C | SEG_E | SEG_G,                            // M (lowercase n with top dash)
     SEG_C | SEG_E | SEG_G,                                    // N (lowercase n)
     SEG_C | SEG_D | SEG_E | SEG_G,                        // O (lowercase o)
     SEG_A | SEG_B | SEG_E | SEG_F | SEG_G,            // P
@@ -89,10 +89,10 @@ static const unsigned long VFD_FONT_MAP[] = {
     SEG_E | SEG_G,                                              // R (lowercase r)
     SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,            // S
     SEG_D | SEG_E | SEG_F | SEG_G,                        // T (lowercase t)
-    SEG_C | SEG_D | SEG_E,                                    // U (lowercase u)
-    0,                                                                  // V
-    0,                                                                  // W
-    0,                                                                  // X
+    SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,                                    // U (lowercase u)
+    SEG_C | SEG_D | SEG_E,                                  // V
+    SEG_A | SEG_C | SEG_D | SEG_E,                             // W
+    SEG_B | SEG_C | SEG_E | SEG_F ,                                                // X
     SEG_B | SEG_C | SEG_D | SEG_F | SEG_G,            // Y
     0                                                                   // Z
 };
@@ -154,6 +154,9 @@ unsigned long DispDriverMAX6921::mapAsciiToSegment(char ascii_char) {
 
 void DispDriverMAX6921::setChar(int position, char character, bool dot) {
     if (position < 0 || position >= _displaySize) return;
+
+    // ENC_LOG("setChar - Pos: %d, Char: '%c', Dot: %s", position, character, dot ? "true" : "false");
+
     unsigned long segments = mapAsciiToSegment(character);
     if (dot) {
         segments |= SEG_DOT; 
@@ -161,30 +164,6 @@ void DispDriverMAX6921::setChar(int position, char character, bool dot) {
     _displayBuffer[position] = segments;
 }
 
-/*
-unsigned long DispDriverMAX6921::mapAsciiToSegment(char ascii_char) {
-    if (ascii_char >= '0' && ascii_char <= '9') {
-        return FONT_MAP[ascii_char - '0'];
-    }
-    // Add more character mappings here if needed (e.g., A-F for hex)
-    switch (toupper(ascii_char)) {
-        case '-': return SEG_G;
-        case ' ': return 0;
-        default: return 0; // Blank for unknown characters
-    }
-}
-
-void DispDriverMAX6921::setChar(int position, char character, bool dot) {
-   
-    if (position < 0 || position >= _displaySize) return;
-    
-    unsigned long segments = mapAsciiToSegment(character);
-    if (dot) {
-        segments |= SEG_DOT;
-    }
-    _displayBuffer[position] = segments;
-}
-*/
 void DispDriverMAX6921::setSegments(int position, uint16_t mask) {
     // This function is less relevant for this driver, but we implement it.
     // It maps the standard 7-segment bits to the MAX6921 bits.
@@ -212,6 +191,27 @@ void DispDriverMAX6921::spiCmd(unsigned long data) {
 }
 
 void DispDriverMAX6921::writeDisplay() {
+    // This function is called in the main loop to multiplex the display.
+    // It sends data for one digit at a time.
+    digitalWrite(_blankPin, HIGH); // Blank the display to prevent ghosting
+
+    // Combine the grid (digit select) and segment data and send via SPI
+    spiCmd(GRIDS[_currentDigit] | _displayBuffer[_currentDigit]);
+    
+    digitalWrite(_blankPin, LOW); // Un-blank the display to light up the digit
+
+    // This delay is the crucial "on-time" for the digit. 1.5ms is a good starting point.
+    delayMicroseconds(1500);
+
+    // Move to the next digit for the next call
+    _currentDigit++;
+    if (_currentDigit >= _displaySize) {
+        _currentDigit = 0;
+    }
+}
+
+/*
+void DispDriverMAX6921::writeDisplay() {
     // This function is called continuously. We use micros() to ensure
     // a consistent 0.5ms interval between steps.
     unsigned long currentTime = micros();
@@ -235,7 +235,7 @@ void DispDriverMAX6921::writeDisplay() {
         _multiplexStep = 0; // Go back to the send step for the next digit
     }
 }
-
+*/
 bool DispDriverMAX6921::needsContinuousUpdate() const {
     return true;
 }

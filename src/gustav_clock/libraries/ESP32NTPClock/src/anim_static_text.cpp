@@ -14,5 +14,5 @@ void StaticTextAnimation::update() {
 }
 
 bool StaticTextAnimation::isDone() {
-     return (millis() - _startTime >= 2000);
+     return (millis() - _startTime >= 2000); // 2 seconds for testing
 }
