@@ -27,7 +27,7 @@ public:
     virtual void setSegments(int position, uint16_t mask) = 0;
 
     void print(const char* text, bool dotsWithPreviousChar = false) {
-        // clear();
+        clear();
         int displaySize = getDisplaySize();
 
         // Dot is combined with the previous character.
