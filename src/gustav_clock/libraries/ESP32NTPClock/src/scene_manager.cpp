@@ -6,7 +6,7 @@
 #include "anim_matrix.h"
 #include "anim_scrolling_text.h"
 
-SceneManager::SceneManager(IBaseClock& clock) : _app(clock) {}
+SceneManager::SceneManager(IBaseClock& clock) : _app(clock), _lastLiveUpdateTime(0) {}
 
 void SceneManager::setup(const DisplayScene* playlist, int numScenes) {
     _scenePlaylist = playlist;
@@ -26,8 +26,6 @@ void SceneManager::update() {
         return;
     }
 
-    // --- Dynamic buffer allocation based on actual display size ---
-    const int displaySize = _app.getDisplay().getDisplaySize();
     // Use a vector for safe memory management. Add +1 for the null terminator.
     std::vector<char> buffer(MAX_SCENE_TEXT_LEN);
 
@@ -104,30 +102,22 @@ void SceneManager::update() {
         ENC_LOG("Scene: %s - %s", newScene.scene_name, sceneText.c_str());
 
     } else {
-
-        // // --- Logic to update the display for the CURRENT scene (if it's static) ---
-        // const DisplayScene& currentScene = _scenePlaylist[_currentSceneIndex];
-
-        // // If the scene has an animation, its final frame should persist. Don't overwrite it.
-        // if (currentScene.animation_type == SCROLLING ||
-        //     currentScene.animation_type == MATRIX ||
-        //     currentScene.animation_type == SLOT_MACHINE) {
-        //     return;
-        // }
-
-        // // Only update static scenes (of which there are none currently, but this is good practice)
-        // time_t now = _app.isRtcActive() ? _app.getRtc().now().unixtime() : time(0);
-        // if (strcmp(currentScene.scene_name, "Time") == 0 || strcmp(currentScene.scene_name, "Date") == 0) {
-        //     _app.formatTime(buffer.data(), buffer.size(), currentScene.format_string, now);
-        // } else {
-        //     float value = currentScene.getDataValue();
-        //     if (value == UNSET_VALUE) {
-        //         // Use snprintf for safety; it guarantees null termination.
-        //         snprintf(buffer.data(), buffer.size(), "NO DATA");
-        //     } else {
-        //         snprintf(buffer.data(), buffer.size(), currentScene.format_string, value);
-        //     }
-        // }
-        // _app.getDisplay().print(buffer.data(), currentScene.dots_with_previous);
+        // An animation is not running, but it's not time to switch scenes yet.
+        // Check if the current scene needs live updates.
+        if (_currentSceneIndex >= 0) {
+            const DisplayScene& currentScene = _scenePlaylist[_currentSceneIndex];
+            if (currentScene.isLiveUpdate) {
+              if (currentTime - _lastLiveUpdateTime >= 100) { // 100ms = 10Hz
+                    _lastLiveUpdateTime = currentTime;
+                    
+                    // Re-format the time string.
+                    time_t now = _app.isRtcActive() ? _app.getRtc().now().unixtime() : time(0);
+                    _app.formatTime(buffer.data(), buffer.size(), currentScene.format_string, now);
+                    
+                    // Print the updated text directly to the display buffer.
+                    _app.getDisplay().print(buffer.data(), currentScene.dots_with_previous);
+                }
+            }
+        }
     }
 }

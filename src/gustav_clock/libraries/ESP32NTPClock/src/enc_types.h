@@ -16,6 +16,7 @@ struct DisplayScene {
   const char* format_string;
   AnimationType animation_type;
   bool dots_with_previous;
+  bool isLiveUpdate;
   unsigned long duration_ms;
   unsigned long anim_param_1;
   unsigned long anim_param_2;

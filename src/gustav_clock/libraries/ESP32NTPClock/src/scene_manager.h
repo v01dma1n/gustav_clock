@@ -23,6 +23,7 @@ private:
     int _numScenes;
     int _currentSceneIndex;
     unsigned long _sceneStartTime;
+    unsigned long _lastLiveUpdateTime;
 
 };
 
