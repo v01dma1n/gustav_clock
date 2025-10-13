@@ -1,5 +1,6 @@
 #include "anim_slot_machine.h"
 #include <Arduino.h>
+#include <algorithm> // Required for std::find
 
 SlotMachineAnimation::SlotMachineAnimation(std::string targetText,
                                            unsigned long lockDelay,
@@ -13,7 +14,6 @@ SlotMachineAnimation::SlotMachineAnimation(std::string targetText,
       _dotsWithPreviousChar(dotsWithPreviousChar),
       _lastLockTime(0),
       _lastSpinTime(0),
-      _lockedCount(0),
       _lockingCompleteTime(0),
       _finalFrameDrawn(false),
       _rng(millis())
@@ -27,16 +27,14 @@ void SlotMachineAnimation::setup(IDisplayDriver* display) {
     _parsedText = _targetText;
     _dotStates.assign(_targetText.length(), 0); 
     
-    // This state vector is no longer used by the simplified update()
-    _isLocked.assign(_display->getDisplaySize(), 0); 
+    // Clear the list of locked indices.
+    _lockedIndices.clear();
     
     _lastLockTime = millis();
     _lastSpinTime = millis();
-    _lockedCount = 0;
     _lockingCompleteTime = 0;
     _finalFrameDrawn = false;
     
-    // The initial draw of spinning numbers remains the same.
     int displaySize = _display->getDisplaySize();
     for (int i = 0; i < displaySize; ++i) {
         _display->setChar(i, _rng.nextRange(0, 9) + '0', false);    
@@ -44,18 +42,16 @@ void SlotMachineAnimation::setup(IDisplayDriver* display) {
 }
 
 bool SlotMachineAnimation::isDone() {
-    // This logic is identical to MatrixAnimation and is known to be stable.
-    bool lockingComplete = _lockedCount >= _display->getDisplaySize();
+    int displaySize = _display->getDisplaySize();
+    bool lockingComplete = _lockedIndices.size() >= displaySize;
     if (!lockingComplete) {
         return false;
     }
     return (millis() - _lockingCompleteTime >= _holdTime);
 }
 
-// --- SIMPLIFIED UPDATE FUNCTION ---
 void SlotMachineAnimation::update() {
     if (isDone()) {
-        // Draw the final frame once when done.
         if (!_finalFrameDrawn) {
             int displaySize = _display->getDisplaySize();
             for (int i = 0; i < displaySize; ++i) {
@@ -72,33 +68,43 @@ void SlotMachineAnimation::update() {
 
     unsigned long currentTime = millis();
     if (currentTime - _lastSpinTime < _spinDelay) {
-        return; // Control spin speed
+        return;
     }
     _lastSpinTime = currentTime;
 
-    // --- Progression Logic (borrowed directly from MatrixAnimation) ---
+    // --- State Update Logic: Randomly lock one new digit ---
     int displaySize = _display->getDisplaySize();
-    bool revealPhaseActive = _lockedCount < displaySize;
-    if (revealPhaseActive && (currentTime - _lastLockTime >= _lockDelay)) {
+    bool isLockingPhase = _lockedIndices.size() < displaySize;
+    if (isLockingPhase && (currentTime - _lastLockTime >= _lockDelay)) {
         _lastLockTime = currentTime;
-        _lockedCount++;
-        if (_lockedCount == displaySize) {
+        
+        // Find a digit that is not yet locked
+        while (_lockedIndices.size() < displaySize) {
+            int potentialIndex = _rng.nextRange(0, displaySize - 1);
+            // Check if the index is already in our list
+            bool alreadyLocked = (std::find(_lockedIndices.begin(), _lockedIndices.end(), potentialIndex) != _lockedIndices.end());
+            if (!alreadyLocked) {
+                _lockedIndices.push_back(potentialIndex); // Lock it
+                break; // Exit the while loop
+            }
+        }
+
+        if (_lockedIndices.size() == displaySize) {
             _lockingCompleteTime = millis();
         }
     }
 
-    // --- Drawing Logic (borrowed directly from MatrixAnimation) ---
+    // --- Drawing Logic: Check if index is in the list ---
     for (int i = 0; i < displaySize; ++i) {
-        // REVEAL characters based on the counter, not the _isLocked vector.
-        if (i < _lockedCount) {
-            // This character is "revealed".
+        bool isLocked = (std::find(_lockedIndices.begin(), _lockedIndices.end(), i) != _lockedIndices.end());
+        
+        if (isLocked) {
             if (i < _parsedText.length()) {
                 _display->setChar(i, _parsedText[i], _dotStates[i]);
             } else {
                 _display->setChar(i, ' ', false);
             }
         } else {
-            // This character is still "spinning".
             _display->setChar(i, _rng.nextRange(0, 9) + '0', false);    
         }
     }

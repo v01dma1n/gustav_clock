@@ -5,6 +5,7 @@
 #include "fast_random.h"
 #include <string>
 #include <vector>
+#include <list>
 
 class SlotMachineAnimation : public IAnimation {
 public:
@@ -25,7 +26,8 @@ private:
     
     // Use a standard, safe vector instead of a raw pointer to prevent memory corruption.
     // Using uint8_t is more robust on embedded systems than the specialized vector<bool>.
-    std::vector<uint8_t> _isLocked;
+    // std::vector<uint8_t> _isLocked;
+    std::list<int> _lockedIndices;
 
     unsigned long _lockDelay;
     unsigned long _holdTime;
