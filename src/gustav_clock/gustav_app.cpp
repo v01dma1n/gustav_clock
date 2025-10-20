@@ -17,14 +17,14 @@ static const DisplayScene scenePlaylist[] = {
     { "Time",        " %H-%M-%S",    SLOT_MACHINE,  false, true,  10000, 200, 50, GustavClockApp_getTimeData },
     { "Temperature", "TMP %3.0f C",  MATRIX,        false, false,  7000, 250, 40, GustavClockApp_getTempData },
     { "Time",        " %H-%M-%S",    SLOT_MACHINE,  false, true,  10000, 200, 50, GustavClockApp_getTimeData },
-    { "Humidity",    "HUM %3.0f PC", MATRIX,        false, false,  7000, 250, 40, GustavClockApp_getHumidityData }
+    { "Humidity",    "HUM %2.0f PCT", MATRIX,        false, false,  7000, 250, 40, GustavClockApp_getHumidityData }
 };
 static const int numScenes = sizeof(scenePlaylist) / sizeof(DisplayScene);
 
 // --- Constructor ---
 GustavClockApp::GustavClockApp() :
     // Initialize the VFD driver with display size and SPI pins
-    _display(DISP_LEN, VSPI_SCLK, VSPI_MISO, VSPI_MOSI, VSPI_SS, VSPI_BLANK),
+    _display(DISP_LEN),
     _appPrefs(),
     _apManager(_appPrefs)
 {
