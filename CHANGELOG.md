@@ -1,8 +1,14 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.1.0] - 2025-12-12
 
-## [3.0.0] - 2025-10-02
+### Added
+
+### Changed
+- Animation and Display are now separate tasks.
+
+
+## [2.0.0] - 2025-10-02
 
 ### Added
 - New `ESP32NTPClock_Drivers` library to segregate hardware drivers.

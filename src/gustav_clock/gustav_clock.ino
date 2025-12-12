@@ -19,10 +19,6 @@ SemaphoreHandle_t serialMutex = NULL;
 AppLogLevel g_appLogLevel = APP_LOG_INFO;
 GustavClockApp& app = GustavClockApp::getInstance();
 
-#define DISPLAY_DIGITS 10
-typedef unsigned long DisplayFrame[DISPLAY_DIGITS];
-QueueHandle_t frameQueue;
-
 /**
  * @brief High-priority task to handle display multiplexing (CONSUMER).
  * Runs on Core 1 (Real-time).
@@ -40,15 +36,16 @@ void displayTask(void *pvParameters) {
   );
   hardwareDriver.begin();
 
-  DisplayFrame localFrame;
-  memset(localFrame, 0, sizeof(DisplayFrame));
+  // Get a reference to the logical display driver owned by the app
+  IDisplayDriver& logicalDisplay = app.getDisplay(); // Get reference from app
+  int displaySize = logicalDisplay.getDisplaySize();
+  // Dynamically allocate a buffer based on the actual display size
+  unsigned long* localFrame = new unsigned long[displaySize]();
+  
   int currentDigit = 0;
-
   for (;;) {
-    // Check for a new frame (non-blocking)
-    if (xQueueReceive(frameQueue, &localFrame, 0) == pdTRUE) {
-      // We got a new frame
-    }
+    // Get the latest frame data directly from the logical driver
+    logicalDisplay.getFrameData(localFrame);
 
     // Write the current digit from our local buffer to the display
     hardwareDriver.writeDigit(currentDigit, localFrame[currentDigit]);
@@ -90,17 +87,6 @@ void setup() {
   Serial.println("\n>>> Starting Gustav VFD Clock...");
   
   serialMutex = xSemaphoreCreateMutex();
-
-  // Create the frame queue
-  frameQueue = xQueueCreate(
-    1,                  // Queue depth of 1 (mailbox)
-    sizeof(DisplayFrame) // Size of the new frame structure
-  );
-
-  if (frameQueue == NULL) {
-    Serial.println("Error creating the frame queue");
-    while (1); // Halt
-  }
 
   // NOTE: app.setup() is REMOVED from here.
 

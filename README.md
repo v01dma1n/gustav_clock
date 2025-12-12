@@ -11,9 +11,7 @@ A 12-digit VFD (Vacuum Fluorescent Display) clock based on the ESP32. It feature
   * **Weather Display:** Fetches and displays the current temperature and humidity for a configured location from OpenWeatherMap.
   * **Animated Scenes:** Cycles through displaying the time, date, and weather using a playlist of customizable animations (Slot Machine, Scrolling, Matrix).
   * **Web Configuration:** On first boot or when WiFi fails, the clock enters an Access Point (AP) mode. You can connect to its WiFi network to configure all settings through a web page on your phone or computer.
-  * **Double-Reset:** Manually enter the AP configuration mode at any time by quickly resetting the device twice.
-  * **Real-Time Clock (RTC):** Uses a DS1307 RTC module to keep time when offline and to enable the double-reset feature.
-
+  * **Note:** the clock does not have RTC (Real Time Clock) hardware 
 -----
 
 ## ⚙️ Hardware Required
@@ -21,7 +19,6 @@ A 12-digit VFD (Vacuum Fluorescent Display) clock based on the ESP32. It feature
   * **ESP32 Module:** An ESP32-WROOM-DA was used in development.
   * **VFD Display:** A 12-digit Vacuum Fluorescent Display.
   * **VFD Driver:** A MAX6921 driver chip.
-  * **RTC Module:** A DS1307 Real-Time Clock module with a backup battery.
   * **Power Supply:** A stable 5V power supply capable of powering the ESP32 and the VFD.
 
 -----
