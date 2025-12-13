@@ -9,7 +9,7 @@ A 12-digit VFD (Vacuum Fluorescent Display) clock based on the ESP32. It feature
 
 ## ✨ Features
 
-  * **12-Digit VFD Display:** Driven by a MAX6921 chip over SPI.
+  * **10-Digit VFD Display:** Driven by a MAX6921 chip over SPI.
   * **Automatic Time Sync:** Connects to your WiFi and synchronizes its time from an NTP server.
   * **Weather Display:** Fetches and displays the current temperature and humidity for a configured location from OpenWeatherMap.
   * **Animated Scenes:** Cycles through displaying the time, date, and weather using a playlist of customizable animations (Slot Machine, Scrolling, Matrix).
